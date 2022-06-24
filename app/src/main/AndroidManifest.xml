@@ -3,6 +3,7 @@
           package="com.myauto.myauto">
 
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <uses-feature
             android:name="android.hardware.camera"
@@ -24,12 +25,6 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-        <activity
-                android:name=".HelloOpenCvActivity"
-                android:configChanges="orientation|keyboardHidden|screenSize"
-                android:exported="true"
-                android:label="@string/title_activity_hello_open_cv"
-                android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
         <activity
                 android:name=".MainActivity"
                 android:exported="true"

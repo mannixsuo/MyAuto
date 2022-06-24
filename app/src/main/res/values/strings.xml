@@ -12,4 +12,5 @@
     <string name="title_activity_hello_open_cv">HelloOpenCvActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="image">Image</string>
 </resources>

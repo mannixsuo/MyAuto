@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
     <fragment
             android:id="@+id/nav_host_fragment_content_main"
             android:name="androidx.navigation.fragment.NavHostFragment"
@@ -16,5 +16,15 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:defaultNavHost="true"
-            app:navGraph="@navigation/nav_graph"/>
+            app:navGraph="@navigation/nav_graph"
+            tools:layout_editor_absoluteX="411dp" tools:layout_editor_absoluteY="349dp"/>
+    <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp" tools:srcCompat="@tools:sample/avatars" android:id="@+id/imageView"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/nav_host_fragment_content_main"
+            app:layout_constraintHorizontal_bias="0.498" app:layout_constraintVertical_bias="0.347"
+            android:contentDescription="@string/image"
+            android:onClick="getPicture" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/nav_host_fragment_content_main"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

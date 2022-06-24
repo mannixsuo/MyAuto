@@ -1,8 +1,14 @@
 package com.myauto.myauto
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -11,6 +17,10 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
 import com.myauto.myauto.databinding.ActivityMainBinding
 import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
+import java.io.InputStream
 
 //import org.opencv.android.OpenCVLoader
 
@@ -18,7 +28,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -36,6 +45,39 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
         OpenCVLoader.initDebug()
+
+    }
+
+    fun getPicture() {
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+        startActivityForResult(intent, 100)
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == RESULT_OK && requestCode == 100) {
+            val uri: Uri? = data?.data
+            try {
+                // 读取图像灰度化
+                uri?.let {
+                    val src = Mat()
+                    val dest = Mat()
+                    val ips: InputStream? = contentResolver.openInputStream(it)
+                    val option: BitmapFactory.Options = BitmapFactory.Options()
+                    option.inSampleSize = 3
+                    val bitmap = BitmapFactory.decodeStream(ips)
+                    Utils.bitmapToMat(bitmap, src)
+                    Imgproc.cvtColor(src, dest, Imgproc.COLOR_BGR2GRAY);
+                    Utils.matToBitmap(dest, bitmap)
+                    val view: ImageView = findViewById(R.id.imageView)
+                    view.setImageBitmap(bitmap);
+                }
+            } catch (e: Exception) {
+                Log.i("err", e.toString())
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
