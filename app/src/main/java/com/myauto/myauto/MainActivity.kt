@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -15,6 +16,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
+import com.myauto.myauto.core.Shell
 import com.myauto.myauto.databinding.ActivityMainBinding
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
@@ -28,6 +30,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    val shell = Shell()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -45,13 +49,20 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
         OpenCVLoader.initDebug()
-
+        shell.initShell("su")
     }
 
-    fun getPicture() {
+    fun home(v: View) {
+//        shell.execAndWaitFor("su")
+        shell.home()
+        shell.tap(720, 2711)
+    }
+
+    fun getPicture(v: View) {
         val intent = Intent(Intent.ACTION_PICK)
         intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
         startActivityForResult(intent, 100)
+
     }
 
 

@@ -1,98 +1,75 @@
 package com.myauto.myauto.core
 
-import android.os.Handler
-import android.preference.PreferenceManager
-import jackpal.androidterm.ShellTermSession
-import jackpal.androidterm.emulatorview.TermSession
-import jackpal.androidterm.util.TermSettings
+import android.util.Log
+import androidx.annotation.RequiresApi
 import java.io.BufferedReader
 import java.io.DataOutputStream
+import java.io.InputStreamReader
 
+/**
+ * Shell used for execute adb command
+ */
 class Shell : AbstractShell() {
-    private lateinit var myProcess: Process
+    /**
+     * shell command execution process
+     */
+    private var myProcess: Process? = null
+
     private lateinit var myCommandOutputStream: DataOutputStream
     private lateinit var mySucceedReader: BufferedReader
     private lateinit var myErrorReader: BufferedReader
     private var mySucceedOutput = StringBuilder()
     private var myErrorOutput = StringBuilder()
+    private val myCommandOutputLock = Object()
 
-
-    private lateinit var myTermSession: TermSession
+    /**
+     * init the shell with initial command
+     */
     override fun initShell(initialCommand: String) {
-        TODO("Not yet implemented")
-    }
-
-
-    fun init(initialCommand: String) {
-        val uiHandler: Handler = Handler(myContext.mainLooper)
-        uiHandler.post {
-            val settings: TermSettings =
-                TermSettings(myContext.resources, PreferenceManager.getDefaultSharedPreferences(myContext))
-            myTermSession = MyShellTermSession(settings, initialCommand)
-            myTermSession.initializeEmulator(1024, 40)
-        }
+        val runtime = Runtime.getRuntime()
+        myProcess = runtime.exec(initialCommand)
+        mySucceedReader = BufferedReader(InputStreamReader(myProcess!!.inputStream))
+        myCommandOutputStream = DataOutputStream(myProcess!!.outputStream)
+        myErrorReader = BufferedReader(InputStreamReader(myProcess!!.errorStream))
     }
 
     override fun exec(command: String) {
-
+        Log.i("Shell", command)
+        myCommandOutputStream.writeBytes(command)
+        if (!command.endsWith(COMMAND_LINE_END)) {
+            myCommandOutputStream.writeBytes(COMMAND_LINE_END)
+        }
+        myCommandOutputStream.flush()
     }
 
+    // TODO no response after execute
+    fun execAndWaitFor(command: String): Result {
+        Log.i("Shell execAndWaitFor", command)
+        myCommandOutputStream.writeBytes(command)
+        if (!command.endsWith(COMMAND_LINE_END)) {
+            myCommandOutputStream.writeBytes(COMMAND_LINE_END)
+        }
+        myCommandOutputStream.flush()
+        val successMsg = StringBuilder()
+        val errorMsg = StringBuilder()
+//        for (s in mySucceedReader.readLines()) {
+//            Log.i("mySucceedReader", s)
+//            successMsg.append(s)
+//        }
+//        for (s in myErrorReader.readLines()) {
+//            Log.i("myErrorReader:", s)
+//            errorMsg.append(s)
+//        }
+        Log.i("Shell", "Shell finish")
+        return Result(1, errorMsg.toString(), successMsg.toString())
+    }
+
+
+    @RequiresApi(26)
     override fun exit() {
-        TODO("Not yet implemented")
-    }
-
-    interface Callback {
-        fun onOutput(str: String?)
-        fun onNewLine(line: String?)
-        fun onInitialized()
-        fun onInterrupted(e: InterruptedException?)
-    }
-
-    class MyShellTermSession(settings: TermSettings, initialCommand: String) :
-        ShellTermSession(settings, initialCommand) {
-        @Volatile
-        private var myInitialized = false
-
-        @Volatile
-        private var myWaitingExit = false
-        private val myStringBuffer = StringBuffer()
-        private val myCommandOutputs = ArrayList<String>()
-        private val mRoot = false
-        private val myInitialLock = Object()
-        private val myExtLock = Object()
-        private lateinit var myCallBack: Callback
-
-        fun onNewLine(line: String) {
-            if (!myInitialized) {
-                if (!mRoot && line.endsWith(" $ sh")) {
-                    notifyInitialized()
-                }
-            } else {
-                myCommandOutputs.add(line)
-            }
-            if (myCallBack != null) {
-                myCallBack.onNewLine(line)
-            }
-            if (myWaitingExit && line.endsWith(" exit")) {
-                notifyExit()
-            }
-        }
-
-        private fun notifyInitialized() {
-            myInitialized = true
-            synchronized(myInitialLock) {
-                myInitialLock.notifyAll()
-            }
-            if (myCallBack != null) {
-                myCallBack.onInitialized()
-            }
-        }
-
-        private fun notifyExit() {
-            synchronized(myExtLock) {
-                myWaitingExit = false
-                myExtLock.notify()
-            }
+        if (myProcess?.isAlive == true) {
+            myProcess?.destroy()
+            myProcess = null
         }
     }
 
