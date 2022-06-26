@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -31,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     val shell = Shell()
+    lateinit var command: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +53,16 @@ class MainActivity : AppCompatActivity() {
         }
         OpenCVLoader.initDebug()
         shell.initShell("su")
+        val sendCommandButton = findViewById<Button>(R.id.button2)
+        sendCommandButton.setOnClickListener {
+            val edit = findViewById<EditText>(R.id.editTextTextPersonName)
+            if (edit is EditText) {
+                command = edit.text.toString()
+                Log.i("command", command)
+            }
+            shell.exec(command)
+        }
+
     }
 
     fun home(v: View) {

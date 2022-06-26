@@ -2,7 +2,6 @@ package com.myauto.myauto.core
 
 import android.util.Log
 import androidx.annotation.RequiresApi
-import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 
@@ -16,8 +15,8 @@ class Shell : AbstractShell() {
     private var myProcess: Process? = null
 
     private lateinit var myCommandOutputStream: DataOutputStream
-    private lateinit var mySucceedReader: BufferedReader
-    private lateinit var myErrorReader: BufferedReader
+    private lateinit var mySucceedReader: InputStreamReader
+    private lateinit var myErrorReader: InputStreamReader
     private var mySucceedOutput = StringBuilder()
     private var myErrorOutput = StringBuilder()
     private val myCommandOutputLock = Object()
@@ -28,9 +27,26 @@ class Shell : AbstractShell() {
     override fun initShell(initialCommand: String) {
         val runtime = Runtime.getRuntime()
         myProcess = runtime.exec(initialCommand)
-        mySucceedReader = BufferedReader(InputStreamReader(myProcess!!.inputStream))
+        mySucceedReader = InputStreamReader(myProcess!!.inputStream)
         myCommandOutputStream = DataOutputStream(myProcess!!.outputStream)
-        myErrorReader = BufferedReader(InputStreamReader(myProcess!!.errorStream))
+        myErrorReader = InputStreamReader(myProcess!!.errorStream)
+        Thread {
+            val buf = CharArray(1024)
+            var read: Int;
+            do {
+                read = mySucceedReader.read(buf)
+                Log.i("mySucceedReader:", String(buf, 0, read))
+            } while (read != -1)
+        }.start()
+
+        Thread {
+            val buf = CharArray(1024)
+            var read: Int;
+            do {
+                read = myErrorReader.read(buf)
+                Log.i("myErrorReader:", String(buf, 0, read))
+            } while (read != -1)
+        }.start()
     }
 
     override fun exec(command: String) {
