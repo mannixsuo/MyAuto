@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import java.io.DataOutputStream
 import java.io.InputStreamReader
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Shell used for execute adb command
@@ -17,9 +18,13 @@ class Shell : AbstractShell() {
     private lateinit var myCommandOutputStream: DataOutputStream
     private lateinit var mySucceedReader: InputStreamReader
     private lateinit var myErrorReader: InputStreamReader
-    private var mySucceedOutput = StringBuilder()
-    private var myErrorOutput = StringBuilder()
+
+    private lateinit var mySucceedOutput: StringBuilder
+    private lateinit var myErrorOutput: StringBuilder
+
     private val myCommandOutputLock = Object()
+
+    private val myCommandLock = ReentrantLock()
 
     /**
      * init the shell with initial command
@@ -33,19 +38,20 @@ class Shell : AbstractShell() {
         Thread {
             val buf = CharArray(1024)
             var read: Int;
+            var string: String
             do {
                 read = mySucceedReader.read(buf)
-                Log.i("mySucceedReader:", String(buf, 0, read))
+                string = String(buf, 0, read)
+                Log.i("mySucceedReader:", string)
+                mySucceedOutput.append(string)
             } while (read != -1)
-        }.start()
-
-        Thread {
-            val buf = CharArray(1024)
-            var read: Int;
             do {
                 read = myErrorReader.read(buf)
-                Log.i("myErrorReader:", String(buf, 0, read))
+                string = String(buf, 0, read)
+                Log.i("myErrorReader:", string)
+                myErrorOutput.append(string)
             } while (read != -1)
+            myCommandOutputLock.notifyAll()
         }.start()
     }
 
@@ -58,26 +64,28 @@ class Shell : AbstractShell() {
         myCommandOutputStream.flush()
     }
 
-    // TODO no response after execute
+
     fun execAndWaitFor(command: String): Result {
-        Log.i("Shell execAndWaitFor", command)
-        myCommandOutputStream.writeBytes(command)
-        if (!command.endsWith(COMMAND_LINE_END)) {
-            myCommandOutputStream.writeBytes(COMMAND_LINE_END)
+        try {
+            // execute one command single time
+            myCommandLock.lock()
+            Log.i("Shell execAndWaitFor", command)
+            mySucceedOutput = StringBuilder()
+            myErrorOutput = StringBuilder()
+            myCommandOutputStream.writeBytes(command)
+            if (!command.endsWith(COMMAND_LINE_END)) {
+                myCommandOutputStream.writeBytes(COMMAND_LINE_END)
+            }
+            myCommandOutputStream.flush()
+            // wait output process to notify
+            myCommandOutputLock.wait(5000)
+            Log.i("Shell", "Shell finish")
+            return Result(1, myErrorOutput.toString(), mySucceedOutput.toString())
+        } finally {
+            // unlock
+            myCommandLock.unlock()
         }
-        myCommandOutputStream.flush()
-        val successMsg = StringBuilder()
-        val errorMsg = StringBuilder()
-//        for (s in mySucceedReader.readLines()) {
-//            Log.i("mySucceedReader", s)
-//            successMsg.append(s)
-//        }
-//        for (s in myErrorReader.readLines()) {
-//            Log.i("myErrorReader:", s)
-//            errorMsg.append(s)
-//        }
-        Log.i("Shell", "Shell finish")
-        return Result(1, errorMsg.toString(), successMsg.toString())
+
     }
 
 
