@@ -1,13 +1,12 @@
 package com.myauto.myauto.core
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Log
 import org.opencv.android.Utils
 import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
-import org.opencv.features2d.DescriptorMatcher
-import org.opencv.features2d.SIFT
+import org.opencv.features2d.*
 import java.io.InputStream
 import java.util.*
 
@@ -94,6 +93,80 @@ class Image {
             Log.i("", "match fail")
         }
 
+    }
+
+    fun findImageBF(templateImageUri: InputStream, originImageUri: InputStream): Bitmap {
+        val templateImage = Mat(200, 200, CvType.CV_8U)
+        Utils.bitmapToMat(BitmapFactory.decodeStream(templateImageUri), templateImage)
+
+        val originImage = Mat(200, 200, CvType.CV_8U)
+        Utils.bitmapToMat(BitmapFactory.decodeStream(originImageUri), originImage)
+
+        val resTemplate = Mat()
+        val resOrigin = Mat()
+
+        val resTemplateDescriptor = Mat()
+        val resOriginDescriptor = Mat()
+        val templateKeyPoints = MatOfKeyPoint()
+        val originalKeyPoints = MatOfKeyPoint()
+        val orb = ORB.create()
+
+        orb.detectAndCompute(templateImage, Mat(), templateKeyPoints, resTemplateDescriptor)
+        orb.detectAndCompute(originImage, Mat(), originalKeyPoints, resOriginDescriptor)
+
+        val bfMatcher = BFMatcher(Core.NORM_HAMMING, true)
+        val matches = MatOfDMatch()
+        bfMatcher.match(resTemplateDescriptor, resOriginDescriptor, matches)
+        val arrayOfDMatchs = matches.toArray()
+        arrayOfDMatchs.sortBy(DMatch::distance)
+
+        Log.i("arrayOfDMatchs", arrayOfDMatchs.toString())
+        val out = Mat()
+        Features2d.drawMatches(templateImage, templateKeyPoints, originImage, originalKeyPoints, matches, out)
+
+        val createBitmap = Bitmap.createBitmap(out.cols(), out.rows(), Bitmap.Config.ARGB_8888)
+
+        Utils.matToBitmap(out, createBitmap)
+        return createBitmap
+    }
+
+    fun findImageSift(templateImageUri: InputStream, originImageUri: InputStream): Bitmap {
+        val templateImage = Mat(1000, 1000, CvType.CV_8U)
+        Utils.bitmapToMat(BitmapFactory.decodeStream(templateImageUri), templateImage)
+
+        val originImage = Mat(1000, 1000, CvType.CV_8U)
+        Utils.bitmapToMat(BitmapFactory.decodeStream(originImageUri), originImage)
+
+        val resTemplate = Mat()
+        val resOrigin = Mat()
+
+
+        val sift = SIFT.create()
+        val templateKeyPoints = MatOfKeyPoint()
+        val originalKeyPoints = MatOfKeyPoint()
+        val templateDescriptor = Mat()
+        val originDescriptor = Mat()
+        sift.detectAndCompute(templateImage, Mat(), templateKeyPoints, templateDescriptor)
+        sift.detectAndCompute(originImage, Mat(), originalKeyPoints, originDescriptor)
+        val matches = ArrayList<MatOfDMatch>()
+        FlannBasedMatcher().knnMatch(templateDescriptor, originDescriptor, matches, 2)
+        val goodMatchList = LinkedList<MatOfDMatch>()
+        matches.forEach {
+            val dMatchArray = it.toArray()
+            val m1 = dMatchArray[0]
+            val m2 = dMatchArray[1]
+            if (m1.distance <= m2.distance * 0.5) {
+                goodMatchList.addLast(it)
+            }
+        }
+
+        val out = Mat()
+        Features2d.drawMatchesKnn(templateImage, templateKeyPoints, originImage, originalKeyPoints, goodMatchList, out)
+
+        val createBitmap = Bitmap.createBitmap(out.cols(), out.rows(), Bitmap.Config.ARGB_8888)
+
+        Utils.matToBitmap(out, createBitmap)
+        return createBitmap
     }
 
 }

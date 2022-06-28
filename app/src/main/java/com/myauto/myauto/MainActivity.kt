@@ -1,6 +1,7 @@
 package com.myauto.myauto
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -24,6 +25,8 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
 
 //import org.opencv.android.OpenCVLoader
@@ -75,7 +78,13 @@ class MainActivity : AppCompatActivity() {
             val template: InputStream? = contentResolver.openInputStream(templateImageUri)
             if (origin != null) {
                 if (template != null) {
-                    Image().findImage(template, origin)
+                    val bitmap = Image().findImageSift(template, origin)
+
+                    val view: ImageView = findViewById(R.id.origin)
+                    val bitmapFile = File(it.context.filesDir.absolutePath + "/bitmap.jpg")
+                    Log.i("bitmapFile", bitmapFile.absolutePath)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, FileOutputStream(bitmapFile))
+                    view.setImageBitmap(bitmap)
                 }
             }
         }
