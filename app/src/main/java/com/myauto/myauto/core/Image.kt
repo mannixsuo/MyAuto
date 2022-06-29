@@ -7,6 +7,7 @@ import org.opencv.android.Utils
 import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import org.opencv.features2d.*
+import org.opencv.imgproc.Imgproc
 import java.io.InputStream
 import java.util.*
 
@@ -139,6 +140,9 @@ class Image {
 
         val resTemplate = Mat()
         val resOrigin = Mat()
+        Imgproc.cvtColor(templateImage, resTemplate, Imgproc.COLOR_BGR2GRAY)
+
+        Imgproc.cvtColor(originImage, resOrigin, Imgproc.COLOR_BGR2GRAY)
 
 
         val sift = SIFT.create()
@@ -146,8 +150,8 @@ class Image {
         val originalKeyPoints = MatOfKeyPoint()
         val templateDescriptor = Mat()
         val originDescriptor = Mat()
-        sift.detectAndCompute(templateImage, Mat(), templateKeyPoints, templateDescriptor)
-        sift.detectAndCompute(originImage, Mat(), originalKeyPoints, originDescriptor)
+        sift.detectAndCompute(resTemplate, Mat(), templateKeyPoints, templateDescriptor)
+        sift.detectAndCompute(resOrigin, Mat(), originalKeyPoints, originDescriptor)
         val matches = ArrayList<MatOfDMatch>()
         FlannBasedMatcher().knnMatch(templateDescriptor, originDescriptor, matches, 2)
         val goodMatchList = LinkedList<MatOfDMatch>()
@@ -158,6 +162,13 @@ class Image {
             if (m1.distance <= m2.distance * 0.5) {
                 goodMatchList.addLast(it)
             }
+        }
+
+        goodMatchList.sortBy {
+            val array = it.toArray()
+            val m1 = array[0]
+            val m2 = array[1]
+            m1.distance - m2.distance
         }
 
         val out = Mat()
