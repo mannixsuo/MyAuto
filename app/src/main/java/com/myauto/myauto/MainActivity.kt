@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
             val template: InputStream? = contentResolver.openInputStream(templateImageUri)
             if (origin != null) {
                 if (template != null) {
-                    val bitmap = Image().findImageSift(template, origin)
+                    val bitmap = Image().matchTemplate(template, origin)
 
                     val view: ImageView = findViewById(R.id.origin)
                     val bitmapFile = File(it.context.filesDir.absolutePath + "/bitmap.jpg")

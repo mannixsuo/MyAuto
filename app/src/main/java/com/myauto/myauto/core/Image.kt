@@ -159,7 +159,7 @@ class Image {
             val dMatchArray = it.toArray()
             val m1 = dMatchArray[0]
             val m2 = dMatchArray[1]
-            if (m1.distance <= m2.distance * 0.5) {
+            if (m1.distance <= m2.distance * 0.4) {
                 goodMatchList.addLast(it)
             }
         }
@@ -178,6 +178,36 @@ class Image {
 
         Utils.matToBitmap(out, createBitmap)
         return createBitmap
+    }
+
+    fun matchTemplate(template: InputStream, src: InputStream): Bitmap {
+        val templateMat = Mat(1000, 1000, CvType.CV_8U)
+        val srcMat = Mat(1000, 1000, CvType.CV_8U)
+
+        val templateBitmap = BitmapFactory.decodeStream(template)
+        val srcBitmap = BitmapFactory.decodeStream(src)
+        Utils.bitmapToMat(templateBitmap, templateMat)
+        Utils.bitmapToMat(srcBitmap, srcMat)
+
+        val templateGrayMat = Mat(1000, 1000, CvType.CV_8U)
+        val srcGrayMat = Mat(1000, 1000, CvType.CV_8U)
+
+
+        Imgproc.cvtColor(templateMat, templateGrayMat, Imgproc.COLOR_BGR2GRAY)
+
+        Imgproc.cvtColor(srcMat, srcGrayMat, Imgproc.COLOR_BGR2GRAY)
+
+        val w = templateMat.cols()
+        val h = templateMat.rows()
+        val resultMat = Mat(1000, 1000, CvType.CV_8U)
+        Imgproc.matchTemplate(templateGrayMat, srcGrayMat, resultMat, Imgproc.TM_CCOEFF_NORMED)
+        val minMaxLoc = Core.minMaxLoc(resultMat)
+        val topLeft = minMaxLoc.maxLoc
+        val bottomRight = Point(topLeft.x + w, topLeft.y + h)
+        Imgproc.rectangle(srcMat, topLeft, bottomRight, Scalar(0.0, 255.0, 2.0), 2)
+        val resultBitmap = Bitmap.createBitmap(srcBitmap)
+        Utils.matToBitmap(srcMat, resultBitmap)
+        return resultBitmap
     }
 
 }
