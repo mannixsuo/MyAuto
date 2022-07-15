@@ -37,6 +37,14 @@ class ScreenMetrics {
         }
     }
 
+    fun getOrientationAwareScreenWidth(orientation: Int): Int {
+        return if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            deviceScreenHeight
+        } else {
+            deviceScreenWidth
+        }
+    }
+
     fun scaleX(x: Int): Int {
         return scaleX(x, myDesignWidth)
     }
@@ -68,4 +76,6 @@ class ScreenMetrics {
     private fun rescaleY(y: Int, height: Int): Int {
         return if (height == 0 || !initialized) y else y * height / deviceScreenHeight
     }
+
+
 }

@@ -35,23 +35,30 @@ class Shell : AbstractShell() {
         mySucceedReader = InputStreamReader(myProcess!!.inputStream)
         myCommandOutputStream = DataOutputStream(myProcess!!.outputStream)
         myErrorReader = InputStreamReader(myProcess!!.errorStream)
+        mySucceedOutput = StringBuilder()
+        myErrorOutput = StringBuilder()
         Thread {
             val buf = CharArray(1024)
             var read: Int;
             var string: String
             do {
                 read = mySucceedReader.read(buf)
-                string = String(buf, 0, read)
-                Log.i("mySucceedReader:", string)
-                mySucceedOutput.append(string)
+                if (read != -1) {
+                    string = String(buf, 0, read)
+                    Log.i("mySucceedReader:", string)
+                    mySucceedOutput.append(string)
+                }
             } while (read != -1)
+
             do {
                 read = myErrorReader.read(buf)
-                string = String(buf, 0, read)
-                Log.i("myErrorReader:", string)
-                myErrorOutput.append(string)
+                if (read!=-1){
+                    string = String(buf, 0, read)
+                    Log.i("myErrorReader:", string)
+                    myErrorOutput.append(string)
+                }
             } while (read != -1)
-            myCommandOutputLock.notifyAll()
+
         }.start()
     }
 

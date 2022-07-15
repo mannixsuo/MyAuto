@@ -1,5 +1,6 @@
 package com.myauto.myauto.core
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -11,7 +12,17 @@ import org.opencv.imgproc.Imgproc
 import java.io.InputStream
 import java.util.*
 
-class Image {
+class Images(
+    context: Context, runtime: Runtime, screenCaptureRequester: ScreenCaptureRequester
+) {
+    private lateinit var mScreenCapture: ScreenCapture
+    private lateinit var mScreenCaptureRequester: ScreenCaptureRequester
+    private lateinit var runtime: Runtime
+    private lateinit var context: Context
+
+    init {
+        
+    }
 
     fun findImage(templateImageUri: InputStream, originImageUri: InputStream) {
 
